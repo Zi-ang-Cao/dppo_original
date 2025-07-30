@@ -429,6 +429,7 @@ class TrainPPODiffusionAgent(TrainPPOAgent):
                 run_results[-1]["chains_trajs"] = chains_trajs
                 run_results[-1]["reward_trajs"] = reward_trajs
             if self.itr % self.log_freq == 0:
+                import pdb; pdb.set_trace()
                 time = timer()
                 run_results[-1]["time"] = time
                 if eval_mode:
@@ -467,6 +468,7 @@ class TrainPPODiffusionAgent(TrainPPOAgent):
                                 "clipfrac": np.mean(clipfracs),
                                 "explained variance": explained_var,
                                 "avg episode reward - train": avg_episode_reward,
+                                "success rate - train": success_rate,
                                 "num episode - train": num_episode_finished,
                                 "diffusion - min sampling std": diffusion_min_sampling_std,
                                 "actor lr": self.actor_optimizer.param_groups[0]["lr"],

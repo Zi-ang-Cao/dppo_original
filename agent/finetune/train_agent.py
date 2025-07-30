@@ -31,9 +31,10 @@ class TrainAgent:
         self.use_wandb = cfg.wandb is not None
         if cfg.wandb is not None:
             wandb.init(
-                entity=cfg.wandb.entity,
                 project=cfg.wandb.project,
                 name=cfg.wandb.run,
+                group=cfg.wandb.group,
+                save_code=True,
                 config=OmegaConf.to_container(cfg, resolve=True),
             )
 

@@ -168,7 +168,6 @@ def make_async(
             if "kitchen" not in id:  # d4rl kitchen does not support rendering!
                 kwargs["render"] = render
             env = make_(id, **kwargs)
-
         # add wrappers
         if wrappers is not None:
             for wrapper, args in wrappers.items():

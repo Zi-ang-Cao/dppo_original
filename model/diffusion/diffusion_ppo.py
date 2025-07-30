@@ -35,7 +35,6 @@ class PPODiffusion(VPGDiffusion):
         **kwargs,
     ):
         super().__init__(**kwargs)
-
         # Whether to normalize advantages within batch
         self.norm_adv = norm_adv
 

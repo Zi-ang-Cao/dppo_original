@@ -147,10 +147,10 @@ class MultiStep(gym.Wrapper):
 
             # done does not differentiate terminal and truncation
             observation, reward, done, info = self.env.step(act)
-
             self.obs.append(observation)
             self.action.append(act)
             self.reward.append(reward)
+
             
             # in gym, timelimit wrapper is automatically used given env._spec.max_episode_steps
             if "TimeLimit.truncated" not in info:
@@ -274,7 +274,6 @@ if __name__ == "__main__":
     )
     wrapper.seed(0)
     obs = wrapper.reset()
-    print(obs.keys())
     img = wrapper.render()
     wrapper.close()
     plt.imshow(img)

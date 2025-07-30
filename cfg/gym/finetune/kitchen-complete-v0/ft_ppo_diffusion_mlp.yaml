@@ -5,9 +5,9 @@ hydra:
     dir: ${logdir}
 _target_: agent.finetune.train_ppo_diffusion_agent.TrainPPODiffusionAgent
 
-name: ${env_name}_ppo_diffusion_mlp_ta${horizon_steps}_td${denoising_steps}_tdf${ft_denoising_steps}
+name: ${env_name}_sac_diffusion_mlp_ta${horizon_steps}_td${denoising_steps}_tdf${ft_denoising_steps}
 logdir: ${oc.env:DPPO_LOG_DIR}/gym-finetune/${name}/${now:%Y-%m-%d}_${now:%H-%M-%S}_${seed}
-base_policy_path: ${oc.env:DPPO_LOG_DIR}/gym-pretrain/kitchen-complete-v0_pre_diffusion_mlp_ta4_td20/2024-10-20_16-47-42_42/checkpoint/state_8000.pt
+base_policy_path: ${oc.env:DPPO_LOG_DIR}/gym-dppo/kitchen-complete-v0_pre_diffusion_mlp_ta4_td20/2024-10-20_16-47-42_42/checkpoint/state_8000.pt
 normalization_path: ${oc.env:DPPO_DATA_DIR}/gym/${env_name}/normalization.npz
 
 seed: 42
@@ -26,7 +26,7 @@ env:
   name: ${env_name}
   max_episode_steps: 280
   reset_at_iteration: False
-  save_video: False
+  save_video: True
   best_reward_threshold_for_success: 4
   wrappers:
     mujoco_locomotion_lowdim:
@@ -63,7 +63,7 @@ train:
   val_freq: 10
   render:
     freq: 1
-    num: 0
+    num: 1
   # PPO specific
   reward_scale_running: True
   reward_scale_const: 1.0

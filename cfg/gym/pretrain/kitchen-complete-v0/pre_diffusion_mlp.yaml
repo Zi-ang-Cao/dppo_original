@@ -17,6 +17,8 @@ action_dim: 9
 denoising_steps: 20
 horizon_steps: 4
 cond_steps: 1
+use_ddim: True
+ddim_steps: 5
 
 wandb:
   entity: ${oc.env:DPPO_WANDB_ENTITY}
@@ -24,7 +26,7 @@ wandb:
   run: ${now:%H-%M-%S}_${name}
 
 train:
-  n_epochs: 3000
+  n_epochs: 8000
   batch_size: 128
   learning_rate: 1e-3
   weight_decay: 1e-6
@@ -36,6 +38,9 @@ train:
 
 model:
   _target_: model.diffusion.diffusion.DiffusionModel
+  use_ddim: ${use_ddim}
+  ddim_steps: ${ddim_steps}
+  controllable_noise: False
   predict_epsilon: True
   denoised_clip_value: 1.0
   network:

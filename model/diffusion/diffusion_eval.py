@@ -15,6 +15,9 @@ log = logging.getLogger(__name__)
 from model.diffusion.diffusion import DiffusionModel
 from model.diffusion.sampling import extract
 
+from model.diffusion.diffusion import DiffusionModel, Sample
+from model.diffusion.sampling import make_timesteps, extract
+
 
 class DiffusionEval(DiffusionModel):
     def __init__(
@@ -33,7 +36,9 @@ class DiffusionEval(DiffusionModel):
 
         # Set up base model --- techncally not needed if all denoising steps are fine-tuned
         self.actor = self.network
+        # import pdb;pdb.set_trace()
         try:
+        # if True:
             base_weights = {
                 key.split("actor.")[1]: checkpoint["model"][key]
                 for key in checkpoint["model"]
@@ -45,9 +50,10 @@ class DiffusionEval(DiffusionModel):
             assert ft_denoising_steps == 0, (
                 "If no base policy weights are found, ft_denoising_steps must be 0"
             )
+            # load ema weights to match DPPO finetune weights
             base_weights = {
-                key.split("network.")[1]: checkpoint["model"][key]
-                for key in checkpoint["model"]
+                key.split("network.")[1]: checkpoint["ema"][key]
+                for key in checkpoint["ema"]
                 if "network." in key
             }
             use_ft = False
@@ -65,6 +71,7 @@ class DiffusionEval(DiffusionModel):
             }
             self.actor_ft.load_state_dict(ft_weights, strict=True)
             logging.info("Loaded fine-tuned policy weights from %s", network_path)
+        self.use_guidance = False
 
     # override
     def p_mean_var(
@@ -76,18 +83,6 @@ class DiffusionEval(DiffusionModel):
         deterministic=False,
     ):
         noise = self.actor(x, t, cond=cond)
-        if self.use_ddim:
-            ft_indices = torch.where(
-                index >= (self.ddim_steps - self.ft_denoising_steps)
-            )[0]
-        else:
-            ft_indices = torch.where(t < self.ft_denoising_steps)[0]
-
-        # overwrite noise for fine-tuning steps
-        if len(ft_indices) > 0:
-            cond_ft = {key: cond[key][ft_indices] for key in cond}
-            noise_ft = self.actor_ft(x[ft_indices], t[ft_indices], cond=cond_ft)
-            noise[ft_indices] = noise_ft
 
         # Predict x_0
         if self.predict_epsilon:
@@ -148,3 +143,4 @@ class DiffusionEval(DiffusionModel):
             )
             logvar = extract(self.ddpm_logvar_clipped, t, x.shape)
         return mu, logvar
+

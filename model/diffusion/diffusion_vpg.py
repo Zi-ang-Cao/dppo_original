@@ -95,7 +95,8 @@ class VPGDiffusion(DiffusionModel):
             )
             if "ema" not in checkpoint:  # load trained RL model
                 self.load_state_dict(checkpoint["model"], strict=False)
-                logging.info("Loaded critic from %s", network_path)
+                logging.info("Loaded critic from %s", network_path)        
+
 
     # ---------- Sampling ----------#
 
@@ -108,7 +109,7 @@ class VPGDiffusion(DiffusionModel):
         # anneal min_sampling_denoising_std
         if type(self.min_sampling_denoising_std) is not float:
             self.min_sampling_denoising_std.step()
-
+    
         # anneal denoising steps
         self.ft_denoising_steps_cnt += 1
         if (
@@ -203,6 +204,8 @@ class VPGDiffusion(DiffusionModel):
                 etas = torch.zeros((x.shape[0], 1, 1)).to(x.device)
             else:
                 etas = self.eta(cond).unsqueeze(1)  # B x 1 x (Da or 1)
+            
+            # etas = torch.zeros((x.shape[0], 1, 1)).to(x.device)
             sigma = (
                 etas
                 * ((1 - alpha_prev) / (1 - alpha) * (1 - alpha / alpha_prev)) ** 0.5
@@ -500,3 +503,5 @@ class VPGDiffusion(DiffusionModel):
         pred = self.critic(cond).squeeze()
         loss_critic = F.mse_loss(pred, reward)
         return loss_actor, loss_critic, eta
+
+

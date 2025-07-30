@@ -207,6 +207,7 @@ class DiffusionMLP(nn.Module):
             input_dim = time_dim + action_dim * horizon_steps + cond_mlp_dims[-1]
         else:
             input_dim = time_dim + action_dim * horizon_steps + cond_dim
+        
         self.mlp_mean = model(
             [input_dim] + mlp_dims + [output_dim],
             activation_type=activation_type,
