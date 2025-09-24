@@ -25,6 +25,9 @@ echo "Log directory set to: $DPPO_LOG_DIR"
 echo "export DPPO_DATA_DIR=\"$DPPO_DATA_DIR\"" >> ~/.bashrc
 echo "export DPPO_LOG_DIR=\"$DPPO_LOG_DIR\"" >> ~/.bashrc
 
+echo "export DPPO_DATA_DIR=\"$DPPO_DATA_DIR\"" >> ~/.zshrc
+echo "export DPPO_LOG_DIR=\"$DPPO_LOG_DIR\"" >> ~/.zshrc
+
 echo "Environment variables DPPO_DATA_DIR and DPPO_LOG_DIR added to .bashrc and applied to the current session."
 
 ##################### WandB #####################
