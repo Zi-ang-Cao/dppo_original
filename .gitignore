@@ -145,3 +145,4 @@ dmypy.json
 cfg/robomimic/*.sh
 
 *.out
+.DS_Store

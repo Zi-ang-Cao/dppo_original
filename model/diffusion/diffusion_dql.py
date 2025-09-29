@@ -26,7 +26,7 @@ class DQLDiffusion(DiffusionModel):
         **kwargs,
     ):
         super().__init__(network=actor, use_ddim=use_ddim, **kwargs)
-        assert not self.use_ddim, "DQL does not support DDIM"
+        # assert not self.use_ddim, "DQL does not support DDIM"
         self.critic = critic.to(self.device)
 
         # target critic
@@ -109,23 +109,34 @@ class DQLDiffusion(DiffusionModel):
 
         # Loop
         x = torch.randn((B, self.horizon_steps, self.action_dim), device=device)
-        t_all = list(reversed(range(self.denoising_steps)))
+        if self.use_ddim:
+            t_all = self.ddim_t
+        else:
+            t_all = list(reversed(range(self.denoising_steps)))
         for i, t in enumerate(t_all):
             t_b = make_timesteps(B, t, device)
+            index_b = make_timesteps(B, i, device)
             mean, logvar = self.p_mean_var(
                 x=x,
                 t=t_b,
                 cond=cond,
+                index=index_b,
             )
             std = torch.exp(0.5 * logvar)
 
             # Determine the noise level
-            if deterministic and t == 0:
-                std = torch.zeros_like(std)
-            elif deterministic:
-                std = torch.clip(std, min=1e-3)
+            if self.use_ddim:
+                if deterministic:
+                    std = torch.zeros_like(std)
+                else:
+                    std = torch.clip(std, min=self.min_sampling_denoising_std)
             else:
-                std = torch.clip(std, min=self.min_sampling_denoising_std)
+                if deterministic and t == 0:
+                    std = torch.zeros_like(std)
+                elif deterministic:
+                    std = torch.clip(std, min=1e-3)
+                else:
+                    std = torch.clip(std, min=self.min_sampling_denoising_std)
             noise = torch.randn_like(x).clamp_(
                 -self.randn_clip_value, self.randn_clip_value
             )
@@ -151,23 +162,34 @@ class DQLDiffusion(DiffusionModel):
 
         # Loop
         x = torch.randn((B, self.horizon_steps, self.action_dim), device=device)
-        t_all = list(reversed(range(self.denoising_steps)))
+        if self.use_ddim:
+            t_all = self.ddim_t
+        else:
+            t_all = list(reversed(range(self.denoising_steps)))
         for i, t in enumerate(t_all):
             t_b = make_timesteps(B, t, device)
+            index_b = make_timesteps(B, i, device)
             mean, logvar = self.p_mean_var(
                 x=x,
                 t=t_b,
                 cond=cond,
+                index=index_b,
             )
             std = torch.exp(0.5 * logvar)
 
             # Determine the noise level
-            if deterministic and t == 0:
-                std = torch.zeros_like(std)
-            elif deterministic:  # For DDPM, sample with noise
-                std = torch.clip(std, min=1e-3)
+            if self.use_ddim:
+                if deterministic:
+                    std = torch.zeros_like(std)
+                else:
+                    std = torch.clip(std, min=self.min_sampling_denoising_std)
             else:
-                std = torch.clip(std, min=self.min_sampling_denoising_std)
+                if deterministic and t == 0:
+                    std = torch.zeros_like(std)
+                elif deterministic:  # For DDPM, sample with noise
+                    std = torch.clip(std, min=1e-3)
+                else:
+                    std = torch.clip(std, min=self.min_sampling_denoising_std)
             noise = torch.randn_like(x).clamp_(
                 -self.randn_clip_value, self.randn_clip_value
             )

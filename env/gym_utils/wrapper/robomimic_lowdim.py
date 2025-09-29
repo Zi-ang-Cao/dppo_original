@@ -70,6 +70,8 @@ class RobomimicLowdimWrapper(gym.Env):
             dtype=np.float32,
         )
 
+        self.step_count = 0
+
     def normalize_obs(self, obs):
         obs = 2 * (
             (obs - self.obs_min) / (self.obs_max - self.obs_min + 1e-6) - 0.5
@@ -111,13 +113,15 @@ class RobomimicLowdimWrapper(gym.Env):
         )  # used to set all environments to specified seeds
         if self.init_state is not None:
             # always reset to the same state to be compatible with gym
-            raw_obs = self.env.reset_to({"states": self.init_state})
+            # raw_obs = self.env.reset_to({"states": self.init_state})
+            raw_obs = self.env.reset_to(self.init_state)
         elif new_seed is not None:
             self.seed(seed=new_seed)
             raw_obs = self.env.reset()
         else:
             # random reset
             raw_obs = self.env.reset()
+        self.step_count = 0
         return self.get_observation(raw_obs)
 
     def step(self, action):
@@ -131,6 +135,7 @@ class RobomimicLowdimWrapper(gym.Env):
             video_img = self.render(mode="rgb_array")
             self.video_writer.append_data(video_img)
 
+        self.step_count += 1
         return obs, reward, False, info
 
     def render(self, mode="rgb_array"):
