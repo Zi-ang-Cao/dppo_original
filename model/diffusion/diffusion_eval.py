@@ -45,9 +45,10 @@ class DiffusionEval(DiffusionModel):
             assert ft_denoising_steps == 0, (
                 "If no base policy weights are found, ft_denoising_steps must be 0"
             )
+            # load ema weights to match DPPO finetune weights
             base_weights = {
-                key.split("network.")[1]: checkpoint["model"][key]
-                for key in checkpoint["model"]
+                key.split("network.")[1]: checkpoint["ema"][key]
+                for key in checkpoint["ema"]
                 if "network." in key
             }
             use_ft = False
@@ -65,6 +66,7 @@ class DiffusionEval(DiffusionModel):
             }
             self.actor_ft.load_state_dict(ft_weights, strict=True)
             logging.info("Loaded fine-tuned policy weights from %s", network_path)
+        self.use_guidance = False
 
     # override
     def p_mean_var(
@@ -76,18 +78,6 @@ class DiffusionEval(DiffusionModel):
         deterministic=False,
     ):
         noise = self.actor(x, t, cond=cond)
-        if self.use_ddim:
-            ft_indices = torch.where(
-                index >= (self.ddim_steps - self.ft_denoising_steps)
-            )[0]
-        else:
-            ft_indices = torch.where(t < self.ft_denoising_steps)[0]
-
-        # overwrite noise for fine-tuning steps
-        if len(ft_indices) > 0:
-            cond_ft = {key: cond[key][ft_indices] for key in cond}
-            noise_ft = self.actor_ft(x[ft_indices], t[ft_indices], cond=cond_ft)
-            noise[ft_indices] = noise_ft
 
         # Predict x_0
         if self.predict_epsilon:

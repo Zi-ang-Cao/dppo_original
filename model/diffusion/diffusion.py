@@ -48,6 +48,7 @@ class DiffusionModel(nn.Module):
         use_ddim=False,
         ddim_discretize="uniform",
         ddim_steps=None,
+        controllable_noise=False,
         **kwargs,
     ):
         super().__init__()
@@ -59,7 +60,7 @@ class DiffusionModel(nn.Module):
         self.predict_epsilon = predict_epsilon
         self.use_ddim = use_ddim
         self.ddim_steps = ddim_steps
-
+        self.controllable_noise = controllable_noise
         # Clip noise value at each denoising step
         self.denoised_clip_value = denoised_clip_value
 
@@ -152,15 +153,16 @@ class DiffusionModel(nn.Module):
 
         In DDIM paper https://arxiv.org/pdf/2010.02502, alpha is alpha_cumprod in DDPM https://arxiv.org/pdf/2102.09672
         """
-        if use_ddim:
+        if self.use_ddim:
             assert predict_epsilon, "DDIM requires predicting epsilon for now."
             if ddim_discretize == "uniform":  # use the HF "leading" style
-                step_ratio = self.denoising_steps // ddim_steps
+                step_ratio = self.denoising_steps // self.ddim_steps
                 self.ddim_t = (
-                    torch.arange(0, ddim_steps, device=self.device) * step_ratio
+                    torch.arange(0, self.ddim_steps, device=self.device) * step_ratio
                 )
             else:
                 raise "Unknown discretization method for DDIM."
+            
             self.ddim_alphas = (
                 self.alphas_cumprod[self.ddim_t].clone().to(torch.float32)
             )
@@ -243,6 +245,7 @@ class DiffusionModel(nn.Module):
             eta=0
             """
             sigma = extract(self.ddim_sigmas, index, x.shape)
+            # sigma should be 0
             dir_xt = (1.0 - alpha_prev - sigma**2).sqrt() * noise
             mu = (alpha_prev**0.5) * x_recon + dir_xt
             var = sigma**2
@@ -276,7 +279,10 @@ class DiffusionModel(nn.Module):
         B = len(sample_data)
 
         # Loop
-        x = torch.randn((B, self.horizon_steps, self.action_dim), device=device)
+        if not self.controllable_noise:
+            x = torch.randn((B, self.horizon_steps, self.action_dim), device=device)
+        else:
+            x = cond["noise_action"]
         if self.use_ddim:
             t_all = self.ddim_t
         else:
