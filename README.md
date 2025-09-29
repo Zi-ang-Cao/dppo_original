@@ -20,21 +20,25 @@
 
 1. Clone the repository
 ```console
-git clone git@github.com:irom-lab/dppo.git
+git clone git@github.com:Zi-ang-Cao/dppo-dsrl.git
 cd dppo
+git checkout dsrl
+
+# TO RUN ORIGINAL DPPO 
+git checkout dppo_original
 ```
 
 2. Install core dependencies with a conda environment (if you do not plan to use Furniture-Bench, a higher Python version such as 3.10 can be installed instead) on a Linux machine with a Nvidia GPU.
 ```console
-conda create -n dppo python=3.8 -y
+conda create -n dppo python=3.10 -y
 conda activate dppo
 pip install -e .
 ```
 
 3. Install specific environment dependencies (Gym / Kitchen / Robomimic / D3IL / Furniture-Bench) or all dependencies (except for Kitchen, which has dependency conflicts with other tasks).
 ```console
-pip install -e .[gym] # or [kitchen], [robomimic], [d3il], [furniture]
-pip install -e .[all] # except for Kitchen
+pip install -e ".[gym]" # or [kitchen], [robomimic], [d3il], [furniture]
+pip install -e ".[all]" # except for Kitchen
 ```
 
 4. [Install MuJoCo for Gym and/or Robomimic](installation/install_mujoco.md). [Install D3IL](installation/install_d3il.md). [Install IsaacGym and Furniture-Bench](installation/install_furniture.md)
